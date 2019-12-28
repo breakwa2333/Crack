@@ -7,3 +7,4 @@ A simple proxy based on TLS to avoid network censorship.
 * DNS over HTTPS
 * Proxy for UDP data
 * TLS Pre-Handshake
+* Link Aggregation
