@@ -7,7 +7,7 @@ from os import path
 from sys import argv
 
 class config():
-    conf_path = path.abspath(path.dirname(argv[0]))+'/crack.conf'
+    conf_path = path.abspath(path.dirname(argv[0]))+'/crack_server.conf'
     if path.exists(conf_path):
         file = open(conf_path,'r')
         conf = load(file)
