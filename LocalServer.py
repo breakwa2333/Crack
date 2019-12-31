@@ -12,13 +12,14 @@ class config():
         file = open(conf_path,'r')
         conf = load(file)
         file.close()
-        UUID = conf['my_server']['uuid'].encode('utf-8')
-        CA = conf['my_server']['ca']
-        LOCAL_PORT = int(conf['my_server']['local_port'])
-        SERVER_HOST = conf['my_server']['server_host']
-        SERVER_PORT = int(conf['my_server']['server_port'])
+        ACTIVE = conf['active']
+        UUID = conf[ACTIVE]['uuid'].encode('utf-8')
+        CA = conf[ACTIVE]['ca']
+        LOCAL_PORT = int(conf[ACTIVE]['local_port'])
+        SERVER_HOST = conf[ACTIVE]['server_host']
+        SERVER_PORT = int(conf[ACTIVE]['server_port'])
     else:
-        example = {'my_server':{'uuid':'','ca':'','server_host':'','server_port':'','local_port':''}}
+        example = {'active':'','my_server':{'uuid':'','ca':'','server_host':'','server_port':'','local_port':''}}
         file = open(conf_path,'w')
         dump(example,file,indent=4)
         file.close()
