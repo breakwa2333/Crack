@@ -26,6 +26,6 @@ A light proxy based on TLS to avoid network censorship.
   * 支持切换服务器
 * 2020/01/02
   * Support built-in auto mode, avoid DNS leaks caused by PAC.
-  * 支持内建自动模式，避免因PAC模式造成的DNS泄露。
   * Speed up server verification speed.
+  * 支持内建自动模式，避免因PAC模式造成的DNS泄露。
   * 加速服务器认证速度。
