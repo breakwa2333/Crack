@@ -12,7 +12,7 @@ class config():
         file = open(conf_path,'r')
         conf = load(file)
         file.close()
-        UUIDs = conf['uuids']
+        UUIDs = set(conf['uuids'])
         CRT = conf['crt']
         KEY = conf['key']
         PORT = int(conf['port'])
