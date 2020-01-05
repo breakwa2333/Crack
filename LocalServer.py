@@ -2,7 +2,7 @@ from select import select
 from socketserver import StreamRequestHandler,ThreadingTCPServer
 from socket import socket,create_connection
 from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion
-from json import load,dump
+from json import *
 from os import path
 from sys import argv
 
@@ -117,32 +117,23 @@ class Crack(ThreadingTCPServer,config):
         ThreadingTCPServer.__init__(self, ('0.0.0.0', self.LOCAL_PORT), TCP_handler)
 
     def load_config(self):
-        conf_path = path.abspath(path.dirname(argv[0]))+'/crack_user.conf'
+        conf_path = self.translate(path.abspath(path.dirname(argv[0]))+'/crack_user.conf')
         if path.exists(conf_path):
             file = open(conf_path, 'r')
-            conf = load(file)
+            conf = self.translate(file.read())
+            conf = loads(conf)
             file.close()
             config.MODE = conf['mode']
             config.ACTIVE = conf['active']
             config.UUID = conf[self.ACTIVE]['uuid'].encode('utf-8')
-            config.CA = conf[self.ACTIVE]['ca']
+            config.CA = self.translate(conf[self.ACTIVE]['ca'])
             config.LOCAL_PORT = int(conf[self.ACTIVE]['local_port'])
             config.SERVER_HOST = conf[self.ACTIVE]['server_host']
             config.SERVER_PORT = int(conf[self.ACTIVE]['server_port'])
-            config.CHINA_LIST_PATH = conf[self.ACTIVE]['china_list_path']
+            config.CHINA_LIST_PATH = self.translate(conf[self.ACTIVE]['china_list_path'])
             self.load_CHINA_LIST()
         else:
-            example = {'mode': '',
-                       'active': '',
-                       'my_server':
-                           {'uuid': '',
-                            'ca': '',
-                            'server_host': '',
-                            'server_port': '',
-                            'local_port': '',
-                            'china_list_path': ''
-                            }
-                       }
+            example = {'mode': '','active': '','my_server':{'uuid': '','ca': '','server_host': '','server_port': '','local_port': '','china_list_path': ''}}
             file = open(conf_path, 'w')
             dump(example, file, indent=4)
             file.close()
@@ -166,6 +157,9 @@ class Crack(ThreadingTCPServer,config):
             for y in sigment:
                 location = {y: location}
             self.deepsearch(self.CHINA_LIST, location)
+
+    def translate(self,path):
+        return path.replace('\\', '/')
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ from select import select
 from socketserver import StreamRequestHandler,ThreadingTCPServer,ThreadingUDPServer
 from socket import socket,create_connection
 from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion
-from json import load,dump
+from json import *
 from os import path
 from sys import argv
 
@@ -84,24 +84,24 @@ class Crack(ThreadingTCPServer,config):
         ThreadingTCPServer.__init__(self, ('0.0.0.0', self.PORT), TCP_handler)
 
     def load_config(self):
-        conf_path = path.abspath(path.dirname(argv[0])) + '/crack_server.conf'
+        conf_path = self.translate(path.abspath(path.dirname(argv[0])) + '/crack_server.conf')
         if path.exists(conf_path):
             file = open(conf_path, 'r')
             conf = load(file)
             file.close()
             config.UUIDs = set(conf['uuids'])
-            config.CRT = conf['crt']
-            config.KEY = conf['key']
+            config.CRT = self.translate(conf['crt'])
+            config.KEY = self.translate(conf['key'])
             config.PORT = int(conf['port'])
         else:
-            example = {'uuids': [''],
-                       'crt': '',
-                       'key': '',
-                       'port': ''}
+            example = {'uuids': [''],'crt': '','key': '','port': ''}
             file = open(conf_path, 'w')
             dump(example, file, indent=4)
             file.close()
             raise AttributeError
+
+    def translate(self,path):
+        return path.replace('\\', '/')
 
 if __name__ == '__main__':
     try:
