@@ -29,3 +29,6 @@ A light proxy based on TLS to avoid network censorship.
   * Speed up server verification speed.
   * 支持内建自动模式，避免因PAC模式造成的DNS泄露。
   * 加速服务器认证速度。
+* 2020/01/05
+  * Support Certificate Authority Root Certificate.
+  * 支持CA颁发机构根证书。
