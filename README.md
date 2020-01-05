@@ -31,4 +31,4 @@ A light proxy based on TLS to avoid network censorship.
   * 加速服务器认证速度。
 * 2020/01/05
   * Support Certificate Authority Root Certificate.
-  * 支持CA颁发机构根证书。
+  * 支持证书颁发机构根证书。
