@@ -31,4 +31,6 @@ A light proxy based on TLS to avoid network censorship.
   * 加速服务器认证速度。
 * 2020/01/05
   * Support Certificate Authority Root Certificate.
+  * Fix path escape characters under Windows environment.
   * 支持证书颁发机构根证书。
+  * 修复Windows下路径转义符问题。
