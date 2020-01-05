@@ -1,26 +1,16 @@
 from select import select
 from socketserver import StreamRequestHandler,ThreadingTCPServer,ThreadingUDPServer
 from socket import socket,create_connection
-from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion,OPENSSL_VERSION
+from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion
 from json import load,dump
 from os import path
 from sys import argv
 
 class config():
-    conf_path = path.abspath(path.dirname(argv[0]))+'/crack_server.conf'
-    if path.exists(conf_path):
-        file = open(conf_path,'r')
-        conf = load(file)
-        file.close()
-        UUIDs = set(conf['uuids'])
-        CRT = conf['crt']
-        KEY = conf['key']
-        PORT = int(conf['port'])
-    else:
-        example = {'uuids':[''],'crt':'','key':'','port':''}
-        file = open(conf_path,'w')
-        dump(example,file,indent=4)
-        file.close()
+    UUIDs = {}
+    CRT = ''
+    KEY = ''
+    PORT = ''
 
 class TCP_handler(StreamRequestHandler,config):
     def handle(self):
@@ -28,35 +18,37 @@ class TCP_handler(StreamRequestHandler,config):
             self.load_TLS()
             self.verify()
             self.analysis()
+            self.response()
         except Exception:
             self.client.close()
             return 0
-        self.loop()
+        else:
+            self.loop()
 
     def analysis(self):
-        request = self.client.recv(65536)
-        if b'http://' not in request.split(b' ')[1]:
-            host = request.split(b' ')[1].split(b':')[0]
-            port = request.split(b' ')[1].split(b':')[1]
+        self.request_data = self.client.recv(65536)
+        sigment = self.request_data.split(b' ')[1]
+        if b'http://' not in self.request_data.split(b' ')[1]:
+            self.host = sigment.split(b':')[0]
+            self.port = sigment.split(b':')[1]
         else:
-            host = request.split(b' ')[1].split(b'/')[2]
-            if b':' in host:
-                port = host.split(b':')[1]
-                host = host.split(b':')[0]
+            self.host = self.request_data.split(b' ')[1].split(b'/')[2]
+            if b':' in self.host:
+                self.port = host.split(b':')[1]
+                self.host = host.split(b':')[0]
             else:
-                port = b'80'
-        self.server = create_connection((host,int(port)),5)
-        self.response(request, host, port)
+                self.port = b'80'
 
-    def response(self,request,host,port):
-        if request[:7] == b'CONNECT':
+    def response(self):
+        self.server = create_connection((self.host,int(self.port)),5)
+        if self.request_data[:7] == b'CONNECT':
             self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
         else:
-            request = request.replace(b'Proxy-', b'', 1)
-            request = request.replace(b':' + port, b'', 1)
-            if port == b'80':
-                request = request.replace(b'http://' + host, b'', 1)
-            self.server.send(request)
+            self.request_data = self.request_data.replace(b'Proxy-', b'', 1)
+            self.request_data = self.request_data.replace(b':' + self.port, b'', 1)
+            if self.port == b'80':
+                self.request_data = self.request_data.replace(b'http://' + self.host, b'', 1)
+            self.server.send(self.request_data)
 
     def load_TLS(self):
         context = SSLContext(PROTOCOL_TLS)
@@ -69,8 +61,8 @@ class TCP_handler(StreamRequestHandler,config):
             raise Exception
 
     def loop(self):
-        while True:
-            try:
+        try:
+            while True:
                 r, w, e = select([self.client, self.server], [], [])
                 if self.client in r:
                     data = self.client.recv(65536)
@@ -80,14 +72,36 @@ class TCP_handler(StreamRequestHandler,config):
                     data = self.server.recv(65536)
                     if self.client.send(data) <= 0:
                         break
-            except Exception:
-                break
-        self.client.close()
-        self.server.close()
+        except Exception:
+            pass
+        finally:
+            self.client.close()
+            self.server.close()
 
 class Crack(ThreadingTCPServer,config):
     def __init__(self):
+        self.load_config()
         ThreadingTCPServer.__init__(self, ('0.0.0.0', self.PORT), TCP_handler)
+
+    def load_config(self):
+        conf_path = path.abspath(path.dirname(argv[0])) + '/crack_server.conf'
+        if path.exists(conf_path):
+            file = open(conf_path, 'r')
+            conf = load(file)
+            file.close()
+            config.UUIDs = set(conf['uuids'])
+            config.CRT = conf['crt']
+            config.KEY = conf['key']
+            config.PORT = int(conf['port'])
+        else:
+            example = {'uuids': [''],
+                       'crt': '',
+                       'key': '',
+                       'port': ''}
+            file = open(conf_path, 'w')
+            dump(example, file, indent=4)
+            file.close()
+            raise AttributeError
 
 if __name__ == '__main__':
     try:

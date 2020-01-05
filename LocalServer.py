@@ -1,41 +1,32 @@
 from select import select
 from socketserver import StreamRequestHandler,ThreadingTCPServer
 from socket import socket,create_connection
-from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion,OPENSSL_VERSION
+from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion
 from json import load,dump
 from os import path
 from sys import argv
 
 class config():
-    conf_path = path.abspath(path.dirname(argv[0]))+'/crack_user.conf'
-    if path.exists(conf_path):
-        file = open(conf_path,'r')
-        conf = load(file)
-        file.close()
-        MODE = conf['mode']
-        ACTIVE = conf['active']
-        UUID = conf[ACTIVE]['uuid'].encode('utf-8')
-        CA = conf[ACTIVE]['ca']
-        LOCAL_PORT = int(conf[ACTIVE]['local_port'])
-        SERVER_HOST = conf[ACTIVE]['server_host']
-        SERVER_PORT = int(conf[ACTIVE]['server_port'])
-        CHINA_LIST_PATH = conf[ACTIVE]['china_list_path']
-        CHINA_LIST = {}
-    else:
-        example = {'mode':'','active':'','my_server':{'uuid':'','ca':'','server_host':'','server_port':'','local_port':'','china_list_path':''}}
-        file = open(conf_path,'w')
-        dump(example,file,indent=4)
-        file.close()
+    CHINA_LIST = {}
+    MODE = ''
+    ACTIVE = ''
+    UUID = ''
+    CA = ''
+    LOCAL_PORT = ''
+    SERVER_HOST = ''
+    SERVER_PORT = ''
 
 class TCP_handler(StreamRequestHandler,config):
     def handle(self):
         try:
             self.client = self.connection
             self.analysis()
+            self.mode()
         except Exception:
             self.client.close()
             return 0
-        self.loop()
+        else:
+            self.loop()
 
     def delete(self,host):
         location = self.CHINA_LIST
@@ -52,46 +43,50 @@ class TCP_handler(StreamRequestHandler,config):
         return False
 
     def analysis(self):
+        self.request_data = self.client.recv(65536)
+        sigment = self.request_data.split(b' ')[1]
+        if b'http://' not in self.request_data.split(b' ')[1]:
+            self.host = sigment.split(b':')[0]
+            self.port = sigment.split(b':')[1]
+        else:
+            self.host = self.request_data.split(b' ')[1].split(b'/')[2]
+            if b':' in self.host:
+                self.port = host.split(b':')[1]
+                self.host = host.split(b':')[0]
+            else:
+                self.port = b'80'
+
+    def response(self):
+        if self.request_data[:7] == b'CONNECT':
+            self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
+        else:
+            self.request_data = self.request_data.replace(b'Proxy-', b'', 1)
+            self.request_data = self.request_data.replace(b':' + self.port, b'', 1)
+            if self.port == b'80':
+                self.request_data = self.request_data.replace(b'http://' + self.host, b'', 1)
+            self.server.send(self.request_data)
+
+    def mode(self):
         if self.MODE == 'global':
             self.load_TLS()
             self.verify()
+        elif self.MODE == 'auto' and not self.delete(self.host.decode('utf-8')):
+            self.load_TLS()
+            self.verify()
+            self.server.send(self.request_data)
         else:
-            request = self.client.recv(65536)
-            if b'http://' not in request.split(b' ')[1]:
-                host = request.split(b' ')[1].split(b':')[0]
-                port = request.split(b' ')[1].split(b':')[1]
-            else:
-                host = request.split(b' ')[1].split(b'/')[2]
-                if b':' in host:
-                    port = host.split(b':')[1]
-                    host = host.split(b':')[0]
-                else:
-                    port = b'80'
-            if self.MODE == 'auto' and not self.delete(host.decode('utf-8')):
-                self.load_TLS()
-                self.verify()
-                self.server.send(request)
-            else:
-                #print(host)
-                self.server = create_connection((host, int(port)), 5)
-                self.response(request, host, port)
-
-    def response(self,request,host,port):
-        if request[:7] == b'CONNECT':
-            self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
-        else:
-            request = request.replace(b'Proxy-', b'', 1)
-            request = request.replace(b':' + port, b'', 1)
-            if port == b'80':
-                request = request.replace(b'http://' + host, b'', 1)
-            self.server.send(request)
+            self.server = create_connection((self.host, int(self.port)), 5)
+            self.response()
 
     def load_TLS(self):
         context = SSLContext(PROTOCOL_TLS)
         context.minimum_version = TLSVersion.TLSv1_3
         context.verify_mode = CERT_REQUIRED
         context.check_hostname = True
-        context.load_verify_locations(self.CA)
+        if self.CA != 'default':
+            context.load_verify_locations(self.CA)
+        else:
+            context.load_default_certs()
         self.server = create_connection((self.SERVER_HOST, self.SERVER_PORT))
         self.server = context.wrap_socket(self.server, server_hostname=self.SERVER_HOST)
 
@@ -99,8 +94,8 @@ class TCP_handler(StreamRequestHandler,config):
         self.server.send(self.UUID)
 
     def loop(self):
-        while True:
-            try:
+        try:
+            while True:
                 r, w, e = select([self.client, self.server], [], [])
                 if self.client in r:
                     data = self.client.recv(65536)
@@ -110,15 +105,49 @@ class TCP_handler(StreamRequestHandler,config):
                     data = self.server.recv(65536)
                     if self.client.send(data) <= 0:
                         break
-            except Exception:
-                break
-        self.client.close()
-        self.server.close()
+        except Exception:
+            pass
+        finally:
+            self.client.close()
+            self.server.close()
 
 class Crack(ThreadingTCPServer,config):
     def __init__(self):
-        self.load_CHINA_LIST()
+        self.load_config()
         ThreadingTCPServer.__init__(self, ('0.0.0.0', self.LOCAL_PORT), TCP_handler)
+
+    def load_config(self):
+        conf_path = path.abspath(path.dirname(argv[0]))+'/crack_user.conf'
+        if path.exists(conf_path):
+            file = open(conf_path, 'r')
+            conf = load(file)
+            file.close()
+            config.MODE = conf['mode']
+            config.ACTIVE = conf['active']
+            config.UUID = conf[self.ACTIVE]['uuid'].encode('utf-8')
+            config.CA = conf[self.ACTIVE]['ca']
+            config.LOCAL_PORT = int(conf[self.ACTIVE]['local_port'])
+            config.SERVER_HOST = conf[self.ACTIVE]['server_host']
+            config.SERVER_PORT = int(conf[self.ACTIVE]['server_port'])
+            config.CHINA_LIST_PATH = conf[self.ACTIVE]['china_list_path']
+            self.load_CHINA_LIST()
+        else:
+            example = {'mode': '',
+                       'active': '',
+                       'my_server':
+                           {'uuid': '',
+                            'ca': '',
+                            'server_host': '',
+                            'server_port': '',
+                            'local_port': '',
+                            'china_list_path': ''
+                            }
+                       }
+            file = open(conf_path, 'w')
+            dump(example, file, indent=4)
+            file.close()
+            raise AttributeError
+
 
     def deepsearch(self,CHINA_LIST, location):
         for key in location.keys():
