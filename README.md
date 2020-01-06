@@ -34,7 +34,7 @@ A light proxy based on TLS to avoid network censorship.
   * Fix path escape characters under Windows environment.
   * 支持证书颁发机构根证书。
   * 修复Windows下路径转义符问题。
-## Profile Keywords 配置文件关键字
+## PROFILE KEYWORDS 配置文件关键字
 * LocalServer 本地服务器
   * 'mode' 内置路由模式，现有3种模式：'global','auto','none'
     * 'global' 全局模式，此关键字将导致所有流经本地代理的流量全部转发至代理服务器。
