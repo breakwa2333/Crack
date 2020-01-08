@@ -18,14 +18,14 @@ class config():
 
 class TCP_handler(StreamRequestHandler,config):
     def handle(self):
-        #try:
+        try:
             self.client = self.connection
             self.analysis()
             self.mode()
-        #except Exception:
+        except Exception:
             self.client.close()
-            #return 0
-        #else:
+            return 0
+        else:
             self.loop()
 
     def delete(self,host):
