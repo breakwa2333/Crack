@@ -34,6 +34,9 @@ A light proxy based on TLS to avoid network censorship.
   * Fix path escape characters under Windows environment.
   * 支持证书颁发机构根证书。
   * 修复Windows下路径转义符问题。
+* 2020/01/08
+  * Reduce latency (1-RTT)
+  * 减小延迟 （1-RTT）
 ## PROFILE KEYWORDS 配置文件关键字
 * LocalServer 本地服务器
   * 'mode' 内置路由模式，现有3种模式：'global','auto','none'
