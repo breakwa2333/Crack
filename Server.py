@@ -18,7 +18,6 @@ class TCP_handler(StreamRequestHandler,config):
             self.load_TLS()
             self.verify()
             self.analysis()
-            self.response()
         except Exception:
             self.client.close()
             return 0
@@ -27,28 +26,11 @@ class TCP_handler(StreamRequestHandler,config):
 
     def analysis(self):
         self.request_data = self.client.recv(65536)
-        sigment = self.request_data.split(b' ')[1]
-        if b'http://' not in self.request_data.split(b' ')[1]:
-            self.host = sigment.split(b':')[0]
-            self.port = sigment.split(b':')[1]
-        else:
-            self.host = self.request_data.split(b' ')[1].split(b'/')[2]
-            if b':' in self.host:
-                self.port = host.split(b':')[1]
-                self.host = host.split(b':')[0]
-            else:
-                self.port = b'80'
-
-    def response(self):
-        self.server = create_connection((self.host,int(self.port)),5)
-        if self.request_data[:7] == b'CONNECT':
-            self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
-        else:
-            self.request_data = self.request_data.replace(b'Proxy-', b'', 1)
-            self.request_data = self.request_data.replace(b':' + self.port, b'', 1)
-            if self.port == b'80':
-                self.request_data = self.request_data.replace(b'http://' + self.host, b'', 1)
-            self.server.send(self.request_data)
+        sigment = self.request_data.split(b'\o\o')
+        self.host = sigment[0]
+        self.port = sigment[1]
+        self.request_data = sigment[2]
+        self.server = create_connection((self.host,int(self.port)))
 
     def load_TLS(self):
         context = SSLContext(PROTOCOL_TLS)
@@ -62,6 +44,7 @@ class TCP_handler(StreamRequestHandler,config):
 
     def loop(self):
         try:
+            self.server.send(self.request_data)
             while True:
                 r, w, e = select([self.client, self.server], [], [])
                 if self.client in r:

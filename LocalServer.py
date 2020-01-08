@@ -18,14 +18,14 @@ class config():
 
 class TCP_handler(StreamRequestHandler,config):
     def handle(self):
-        try:
+        #try:
             self.client = self.connection
             self.analysis()
             self.mode()
-        except Exception:
+        #except Exception:
             self.client.close()
-            return 0
-        else:
+            #return 0
+        #else:
             self.loop()
 
     def delete(self,host):
@@ -51,8 +51,8 @@ class TCP_handler(StreamRequestHandler,config):
         else:
             self.host = self.request_data.split(b' ')[1].split(b'/')[2]
             if b':' in self.host:
-                self.port = host.split(b':')[1]
-                self.host = host.split(b':')[0]
+                self.port = self.host.split(b':')[1]
+                self.host = self.host.split(b':')[0]
             else:
                 self.port = b'80'
 
@@ -67,23 +67,20 @@ class TCP_handler(StreamRequestHandler,config):
             self.server.send(self.request_data)
 
     def mode(self):
-        if self.MODE == 'global':
+        if self.MODE == 'global' or (self.MODE == 'auto' and not self.delete(self.host.decode('utf-8'))):
             self.load_TLS()
             self.verify()
-        elif self.MODE == 'auto' and not self.delete(self.host.decode('utf-8')):
-            self.load_TLS()
-            self.verify()
-            self.server.send(self.request_data)
+            self.server.send(self.host+b'\o\o'+self.port+b'\o\o')
         else:
             self.server = create_connection((self.host, int(self.port)), 5)
-            self.response()
+        self.response()
 
     def load_TLS(self):
         context = SSLContext(PROTOCOL_TLS)
         context.minimum_version = TLSVersion.TLSv1_3
         context.verify_mode = CERT_REQUIRED
         context.check_hostname = True
-        if self.CA != 'default':
+        if self.CA != 'default' and self.CA != '':
             context.load_verify_locations(self.CA)
         else:
             context.load_default_certs()
