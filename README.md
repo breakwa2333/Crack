@@ -37,11 +37,6 @@ A light anonymous proxy based on TLS to avoid network censorship.
 * 2020/01/08
   * Reduce 1-RTT latency.
   * 减少1-RTT延迟。
-* 2020/01/09
-  * Fix Telegram cannot connect.
-  * Improve proxy anonymity.
-  * 修复Telegram无法连接问题。
-  * 提高代理匿名性。
 ## PROFILE KEYWORDS 配置文件关键字
 * LocalServer 本地服务器
   * 'mode' 内置路由模式，现有3种模式：'global','auto','none'
