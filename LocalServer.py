@@ -8,6 +8,7 @@ from sys import argv
 
 class config():
     CHINA_LIST = {}
+    LOCAL_LIST = {}
     MODE = ''
     ACTIVE = ''
     UUID = ''
@@ -20,7 +21,8 @@ class TCP_handler(StreamRequestHandler,config):
     def handle(self):
         try:
             self.client = self.connection
-            self.analysis()
+            self.request_data = self.client.recv(65536)
+            self.analysis(self.request_data)
             self.mode()
         except Exception:
             self.client.close()
@@ -28,9 +30,10 @@ class TCP_handler(StreamRequestHandler,config):
         else:
             self.loop()
 
-    def delete(self,host):
-        location = self.CHINA_LIST
+    def delete(self,host,location):
         sigment = host.split('.')
+        if location == self.LOCAL_LIST:
+            sigment.reverse()
         END = -len(sigment)
         for x in range(-1, END - 1, -1):
             if '*' in location:
@@ -40,11 +43,19 @@ class TCP_handler(StreamRequestHandler,config):
                     location = location[sigment[x]]
                 elif '|' in location[sigment[x]]:
                     return True
+            else:
+                break
         return False
 
-    def analysis(self):
-        self.request_data = self.client.recv(65536)
-        sigment = self.request_data.split(b' ')[1]
+    def rewrite(self,data):
+        data = data.replace(b'Proxy-', b'', 1)
+        data = data.replace(b':' + self.port, b'', 1)
+        if self.port == b'80':
+            data = data.replace(b'http://' + self.host, b'', 1)
+        return data
+
+    def analysis(self,data):
+        sigment = data.split(b' ')[1]
         if b'http://' not in self.request_data.split(b' ')[1]:
             self.host = sigment.split(b':')[0]
             self.port = sigment.split(b':')[1]
@@ -60,14 +71,11 @@ class TCP_handler(StreamRequestHandler,config):
         if self.request_data[:7] == b'CONNECT':
             self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
         else:
-            self.request_data = self.request_data.replace(b'Proxy-', b'', 1)
-            self.request_data = self.request_data.replace(b':' + self.port, b'', 1)
-            if self.port == b'80':
-                self.request_data = self.request_data.replace(b'http://' + self.host, b'', 1)
-            self.server.send(self.request_data)
+            self.server.send(self.rewrite(self.request_data))
 
     def mode(self):
-        if self.MODE == 'global' or (self.MODE == 'auto' and not self.delete(self.host.decode('utf-8'))):
+        host = self.host.decode('utf-8')
+        if (self.MODE == 'global' or (self.MODE == 'auto' and not self.delete(host,self.CHINA_LIST))) and not self.delete(host,self.LOCAL_LIST):
             self.load_TLS()
             self.verify()
             self.server.send(self.host+b'\o\o'+self.port+b'\o\o')
@@ -96,6 +104,9 @@ class TCP_handler(StreamRequestHandler,config):
                 r, w, e = select([self.client, self.server], [], [])
                 if self.client in r:
                     data = self.client.recv(65536)
+                    if data[:3] == b'GET' or data[:4] == b'POST':
+                        self.analysis(data)
+                        data = self.rewrite(data)
                     if self.server.send(data) <= 0:
                         break
                 if self.server in r:
@@ -128,7 +139,8 @@ class Crack(ThreadingTCPServer,config):
             config.SERVER_HOST = conf[self.ACTIVE]['server_host']
             config.SERVER_PORT = int(conf[self.ACTIVE]['server_port'])
             config.CHINA_LIST_PATH = self.translate(conf[self.ACTIVE]['china_list_path'])
-            self.load_CHINA_LIST()
+            self.load_CHINA_LSIT()
+            self.load_LOCAL_LIST()
         else:
             example = {'mode': '','active': '','my_server':{'uuid': '','ca': '','server_host': '','server_port': '','local_port': '','china_list_path': ''}}
             file = open(conf_path, 'w')
@@ -137,23 +149,40 @@ class Crack(ThreadingTCPServer,config):
             raise AttributeError
 
 
-    def deepsearch(self,CHINA_LIST, location):
+    def deepsearch(self,target,location):
         for key in location.keys():
-            if key not in CHINA_LIST:
-                CHINA_LIST[key] = location[key]
+            if key not in target:
+                target[key] = location[key]
             else:
-                self.deepsearch(CHINA_LIST[key], location[key])
+                self.deepsearch(target[key], location[key])
 
-    def load_CHINA_LIST(self):
-        file = open(self.CHINA_LIST_PATH,'r')
-        data = load(file)
-        file.close()
+    def load_host_list(self,data,target):
         for x in data:
             sigment = x.split('.')
             location = {'|': {}}
             for y in sigment:
                 location = {y: location}
-            self.deepsearch(self.CHINA_LIST, location)
+            self.deepsearch(target, location)
+
+    def load_ip_list(self,data,target):
+        for x in data:
+            sigment = x.split('.')
+            location = {'|': {}}
+            if len(sigment) > 1:
+                sigment.reverse()
+            for y in sigment:
+                location = {y: location}
+            self.deepsearch(target, location)
+
+    def load_CHINA_LSIT(self):
+        file = open(self.CHINA_LIST_PATH,'r')
+        data = load(file)
+        file.close()
+        self.load_host_list(data,self.CHINA_LIST)
+
+    def load_LOCAL_LIST(self):
+        data = ["localhost","127.*","10.*","192.168.*"]
+        self.load_ip_list(data,self.LOCAL_LIST)
 
     def translate(self,path):
         return path.replace('\\', '/')
