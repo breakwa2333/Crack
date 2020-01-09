@@ -19,11 +19,11 @@ A light proxy based on TLS to avoid network censorship.
 * 2019/12/30
   * Support proxy for TCP data only.
   * Lower CPU usage than before.
-  * 目前仅支持TCP数据代理
-  * 相比之前更少的CPU占用
+  * 目前仅支持TCP数据代理。
+  * 相比之前更少的CPU占用。
 * 2019/12/31
   * Support switching servers.
-  * 支持切换服务器
+  * 支持切换服务器。
 * 2020/01/02
   * Support built-in auto mode, avoid DNS leaks caused by PAC.
   * Speed up server verification speed.
