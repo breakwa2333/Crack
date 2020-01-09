@@ -1,5 +1,5 @@
 # Crack 裂缝
-A light proxy based on TLS to avoid network censorship.
+A light anonymous proxy based on TLS to avoid network censorship.
 一个轻量级匿名代理，基于TLS帮助躲避审查。
 ## ABOUT THIS PROJECT 关于本项目
 * In order to prove both HTTP/WS and camouflage website isn't a necessary factor to crack the wall, this project simply use TCP+TLS as the transport methord only.
