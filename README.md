@@ -63,5 +63,5 @@ A light anonymous proxy based on TLS to avoid network censorship.
 ## FAQ 常见问题
 * Q: 客户端代理服务器端口是不是配置文件中'local_port'指定的端口？  
 A: 是的，Crack与其他代理不同的是HTTP代理与SOCKS5代理共用同一端口，自动识别协议。
-* Q: Crack是基于什么版本的TLS协议？
+* Q: Crack是基于什么版本的TLS协议？  
 A: 基于TLS1.3，出于安全原因目前Crack仅支持TLS1.3及后续版本。
