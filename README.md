@@ -17,9 +17,9 @@ A light anonymous proxy based on TLS to avoid network censorship.
 * 链路聚合（高峰时段增加单线程带宽）
 ## PROJECT STATUS 项目状态
 * 2019/12/30
-  * Support proxy for TCP data only.
+  * Support HTTP proxy for TCP data only.
   * Lower CPU usage than before.
-  * 目前仅支持TCP数据代理。
+  * 目前仅支持TCP数据HTTP代理。
   * 相比之前更少的CPU占用。
 * 2019/12/31
   * Support switching servers.
@@ -37,6 +37,9 @@ A light anonymous proxy based on TLS to avoid network censorship.
 * 2020/01/08
   * Reduce 1-RTT latency.
   * 减少1-RTT延迟。
+* 2020/01/11
+  * Support SOCKS5 proxy for TCP data.
+  * 支持TCP数据SOCKS5代理。
 ## PROFILE KEYWORDS 配置文件关键字
 * LocalServer 本地服务器
   * 'mode' 内置路由模式，现有3种模式：'global','auto','none'
