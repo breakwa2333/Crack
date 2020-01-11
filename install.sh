@@ -24,17 +24,11 @@ conf(){
   reboot
 }
 
-debconf(){
-  debconf-set-selections <<< "libssl1.1/restart-services Yes"
-  debconf-set-selections <<< "libssl1.1/restart-failed Yes"
-}
-
 main(){
   mkdir $(cd "$(dirname "$0")";pwd)/Crack
   cd $(cd "$(dirname "$0")";pwd)/Crack
   apt-get update
-  debconf
-  apt-get install python3.7 -y
+  apt-get install python3.7 -y --force-yes --assume-yes
   wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
   service
   mv $(cd "$(dirname "$0")";pwd)/Crack.service /etc/systemd/system/
