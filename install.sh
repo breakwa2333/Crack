@@ -20,7 +20,7 @@ EOF
 }
 
 conf(){
-  echo alias Crack='vim $(cd "$(dirname "$0")";pwd)/crack_server.conf'>>~/.bashrc
+  echo "alias Crack='vim $(cd "$(dirname "$0")";pwd)/crack_server.conf'">>~/.bashrc
   source ~/.bashrc
 }
 
