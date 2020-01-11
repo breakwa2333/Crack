@@ -21,8 +21,7 @@ EOF
 
 conf(){
   echo "alias Crack='vim $(cd "$(dirname "$0")";pwd)/crack_server.conf'">>~/.bashrc
-  sleep 2
-  source ~/.bashrc
+  reboot
 }
 
 debconf(){
