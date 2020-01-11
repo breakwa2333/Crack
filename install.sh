@@ -1,5 +1,6 @@
 #!/bin/bash
 service(){
+  touch ./Crack/Crack.service
   cat>./Crack/Crack.service<<EOF
   [Unit]
   Description=test deamon
@@ -24,7 +25,6 @@ main(){
   apt-get update
   apt-get install python3.7.6 -y
   wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
-  python3.7.6 Server.py
   service
   mv ./Crack/Crack.service /etc/systemd/system/
   systemctl enable Crack.service
