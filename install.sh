@@ -28,7 +28,10 @@ main(){
   mkdir $(cd "$(dirname "$0")";pwd)/Crack
   cd $(cd "$(dirname "$0")";pwd)/Crack
   apt-get update
-  apt-get install python3.7 -y --force-yes --assume-yes
+  dpkg-reconfigure libc6
+  DEBIAN_FRONTEND=noninteractive dpkg --configure libssl1.1 
+  DEBIAN_FRONTEND=noninteractive apt-get install -y libssl1.1
+  apt-get install python3.7 -y
   wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
   service
   mv $(cd "$(dirname "$0")";pwd)/Crack.service /etc/systemd/system/
