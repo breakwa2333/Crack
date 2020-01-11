@@ -15,7 +15,7 @@ service(){
 
   [Install]
   WantedBy=multi-user.target
-  EOF
+EOF
 }
 
 main(){
@@ -30,4 +30,5 @@ main(){
   systemctl enable Crack.service
   systemctl start Crack.service
 }
+
 main
