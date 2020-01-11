@@ -25,8 +25,8 @@ conf(){
 }
 
 debconf(){
-  debconf-set-selections <<< "libssl1.1/restart-services True"
-  debconf-set-selections <<< "libssl1.1/restart-failed True"
+  debconf-set-selections <<< "libssl1.1/restart-services Yes"
+  debconf-set-selections <<< "libssl1.1/restart-failed Yes"
 }
 
 main(){
