@@ -60,3 +60,6 @@ A light anonymous proxy based on TLS to avoid network censorship.
   * 'crt' 服务器证书路径
   * 'key' 服务器私钥路径
   * 'port' 指定服务器监听端口
+## FAQ 常见问题
+* Q：客户端代理服务器端口是不是配置文件中'local_port'指定的端口？
+  A：是的，Crack与其他代理不同的是HTTP代理与SOCKS5代理共用同一端口，自动识别协议。
