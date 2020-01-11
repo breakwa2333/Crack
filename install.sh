@@ -11,7 +11,7 @@ service(){
   User=root
   Group=root
   WorkingDirectory=$(cd "$(dirname "$0")";pwd)
-  ExecStart=/usr/bin/python3 $(cd "$(dirname "$0")";pwd)/Server.py
+  ExecStart=/usr/bin/python3.7 $(cd "$(dirname "$0")";pwd)/Server.py
   Restart=always
 
   [Install]
