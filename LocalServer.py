@@ -1,8 +1,9 @@
 from select import select
 from socketserver import StreamRequestHandler,ThreadingTCPServer
-from socket import socket,create_connection
+from socket import socket,create_connection,inet_ntop,AF_INET6,AF_INET
 from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion
 from json import *
+from re import match
 from os import path
 from sys import argv
 
@@ -16,67 +17,7 @@ class config():
     SERVER_HOST = ''
     SERVER_PORT = ''
 
-class TCP_handler(StreamRequestHandler,config):
-    def handle(self):
-        try:
-            self.client = self.connection
-            self.analysis()
-            self.mode()
-        except Exception:
-            self.client.close()
-            return 0
-        else:
-            self.loop()
-
-    def delete(self,host):
-        location = self.CHINA_LIST
-        sigment = host.split('.')
-        END = -len(sigment)
-        for x in range(-1, END - 1, -1):
-            if '*' in location:
-                return True
-            elif sigment[x] in location:
-                if x > END:
-                    location = location[sigment[x]]
-                elif '|' in location[sigment[x]]:
-                    return True
-            else:
-                break
-        return False
-
-    def analysis(self):
-        self.request_data = self.client.recv(65536)
-        sigment = self.request_data.split(b' ')[1]
-        if b'http://' not in sigment:
-            self.host = sigment.split(b':')[0]
-            self.port = sigment.split(b':')[1]
-        else:
-            self.host = sigment.split(b'/')[2]
-            if b':' in self.host:
-                self.port = self.host.split(b':')[1]
-                self.host = self.host.split(b':')[0]
-            else:
-                self.port = b'80'
-
-    def response(self):
-        if self.request_data[:7] == b'CONNECT':
-            self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
-        else:
-            self.request_data = self.request_data.replace(b'Proxy-', b'', 1)
-            self.request_data = self.request_data.replace(b':' + self.port, b'', 1)
-            if self.port == b'80':
-                self.request_data = self.request_data.replace(b'http://' + self.host, b'', 1)
-            self.server.send(self.request_data)
-
-    def mode(self):
-        if self.MODE == 'global' or (self.MODE == 'auto' and not self.delete(self.host.decode('utf-8'))):
-            self.load_TLS()
-            self.verify()
-            self.server.send(self.host+b'\o\o'+self.port+b'\o\o')
-        else:
-            self.server = create_connection((self.host, int(self.port)), 5)
-        self.response()
-
+class TLS():
     def load_TLS(self):
         context = SSLContext(PROTOCOL_TLS)
         context.minimum_version = TLSVersion.TLSv1_3
@@ -109,6 +50,110 @@ class TCP_handler(StreamRequestHandler,config):
         finally:
             self.client.close()
             self.server.close()
+
+class SOCKS5(config,TLS):
+    def run(self):
+        try:
+            self.analysis_socks5()
+            self.load_TLS()
+            self.verify()
+            self.server.send(self.host + b'\o\o' + self.port + b'\o\o')
+        except Exception:
+            return 0
+        else:
+            self.loop()
+
+    def analysis_socks5(self):
+        self.client.send(b'\x05\x00')
+        request = self.client.recv(65536)
+        if request[3] == 1:
+            self.host = inet_ntop(AF_INET, request[4:8]).encode('utf-8')
+            self.port = str(int.from_bytes(request[-2:], 'big')).encode('utf-8')
+            self.client.send(b'\x05\x00\x00\x01' + request[4:])
+        elif request[3] == 4:
+            self.host = inet_ntop(AF_INET6, request[4:20]).encode('utf-8')
+            self.port = str(int.from_bytes(request[-2:], 'big')).encode('utf-8')
+            self.client.send(b'\x05\x00\x00\x04' + request[4:])
+        elif request[3] == 3:
+            self.host = request[5:5 + request[4]]
+            self.port = str(int.from_bytes(request[-2:], 'big')).encode('utf-8')
+            self.client.send(b'\x05\x00\x00\x03' + request[4:])
+
+class HTTP(config,TLS):
+    def run(self):
+        try:
+            self.analysis_http()
+            self.mode()
+        except Exception:
+            return 0
+        else:
+            self.loop()
+
+    def delete(self,host):
+        sigment = host.split('.')
+        if match('\D', sigment[-1]) == None:
+            sigment.reverse()
+        location = self.CHINA_LIST
+        END = -len(sigment)
+        for x in range(-1, END - 1, -1):
+            if '*' in location:
+                return True
+            elif sigment[x] in location:
+                if x > END:
+                    location = location[sigment[x]]
+                elif '|' in location[sigment[x]]:
+                    return True
+            else:
+                break
+        return False
+
+    def analysis_http(self):
+        sigment = self.request_data.split(b' ')[1]
+        if b'http://' not in sigment:
+            self.host = sigment.split(b':')[0]
+            self.port = sigment.split(b':')[1]
+        else:
+            self.host = sigment.split(b'/')[2]
+            if b':' in self.host:
+                self.port = self.host.split(b':')[1]
+                self.host = self.host.split(b':')[0]
+            else:
+                self.port = b'80'
+
+    def response(self):
+        if self.request_data[:7] == b'CONNECT':
+            self.client.send(b'''HTTP/1.1 200 Connection Established\r\nProxy-Connection: close\r\n\r\n''')
+        else:
+            self.request_data = self.request_data.replace(b'Proxy-', b'', 1)
+            self.request_data = self.request_data.replace(b':' + self.port, b'', 1)
+            if self.port == b'80':
+                self.request_data = self.request_data.replace(b'http://' + self.host, b'', 1)
+            self.server.send(self.request_data)
+
+    def mode(self):
+        if self.MODE == 'global' or (self.MODE == 'auto' and not self.delete(self.host.decode('utf-8'))):
+            self.load_TLS()
+            self.verify()
+            self.server.send(self.host+b'\o\o'+self.port+b'\o\o')
+        else:
+            self.server = create_connection((self.host, int(self.port)), 5)
+        self.response()
+
+class TCP_handler(StreamRequestHandler,HTTP,SOCKS5):
+    def handle(self):
+        try:
+            self.client = self.connection
+            self.request_data = self.client.recv(65536)
+        except Exception:
+            self.client.close()
+            return 0
+        else:
+            if self.request_data[:1] != b'\x05':
+                HTTP.run(self)
+            elif self.request_data[1:3] == b'\x01\x00':
+                SOCKS5.run(self)
+            else:
+                self.client.send(b'\x05\xff')
 
 class Crack(ThreadingTCPServer,config):
     def __init__(self):
@@ -152,6 +197,8 @@ class Crack(ThreadingTCPServer,config):
         file.close()
         for x in data:
             sigment = x.split('.')
+            if match('\D', sigment[-1]) == None:
+                sigment.reverse()
             location = {'|': {}}
             for y in sigment:
                 location = {y: location}
