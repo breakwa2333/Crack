@@ -23,7 +23,7 @@ main(){
   mkdir ./Crack
   cd ./Crack
   apt-get update
-  apt-get install python3.7.6 -y
+  apt-get install python3.7 -y
   wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
   service
   mv ./Crack/Crack.service /etc/systemd/system/
