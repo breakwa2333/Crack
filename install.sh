@@ -19,6 +19,11 @@ service(){
 EOF
 }
 
+conf(){
+  echo alias Crack='vim $(cd "$(dirname "$0")";pwd)/crack_server.conf'>>~/.bashrc
+  source ~/.bashrc
+}
+
 main(){
   mkdir $(cd "$(dirname "$0")";pwd)/Crack
   cd $(cd "$(dirname "$0")";pwd)/Crack
@@ -29,6 +34,7 @@ main(){
   mv $(cd "$(dirname "$0")";pwd)/Crack.service /etc/systemd/system/
   systemctl enable Crack.service
   systemctl start Crack.service
+  conf
 }
 
 main
