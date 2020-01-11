@@ -10,8 +10,8 @@ service(){
   Type=simple
   User=root
   Group=root
-  WorkingDirectory=$(cd "$(dirname "$0")";pwd)/Crack
-  ExecStart=/usr/bin/python3 $(cd "$(dirname "$0")";pwd)/Crack/server.py
+  WorkingDirectory=$(cd "$(dirname "$0")";pwd)
+  ExecStart=/usr/bin/python3 $(cd "$(dirname "$0")";pwd)/server.py
   Restart=always
 
   [Install]
