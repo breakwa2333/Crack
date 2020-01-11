@@ -20,14 +20,20 @@ EOF
 }
 
 conf(){
-  echo "alias Crack='vim $(cd "$(dirname "$0")";pwd)/crack_server.conf'">>~/.bashrc
-  source ~/.bashrc
+  echo "alias Crack='vim $(cd "$(dirname "$0")";pwd)/crack_server.conf'">>/root/.bashrc
+  source /root/.bashrc
+}
+
+debconf(){
+  debconf-set-selections <<< "libssl1.1/restart-services True"
+  debconf-set-selections <<< "libssl1.1/restart-failed True"
 }
 
 main(){
   mkdir $(cd "$(dirname "$0")";pwd)/Crack
   cd $(cd "$(dirname "$0")";pwd)/Crack
   apt-get update
+  debconf
   apt-get install python3.7 -y
   wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
   service
