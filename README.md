@@ -70,5 +70,5 @@ A light proxy based on TLS to avoid network censorship.
 A: 是的，Crack与其他代理不同的是HTTP代理与SOCKS5代理共用同一端口，自动识别协议。
 * Q: Crack是基于什么版本的TLS协议？  
 A: 基于TLS1.3，出于安全原因目前Crack仅支持TLS1.3及后续版本。
-* Q: 为什么我不能安装  
+* Q: 为什么我不能安装？  
 A: 安装脚本仅支持Ubuntu发行版，并且需要root权限。
