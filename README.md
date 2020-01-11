@@ -61,11 +61,11 @@ A light proxy based on TLS to avoid network censorship.
   * ```key``` 服务器私钥路径
   * ```port``` 指定服务器监听端口
 ## USAGE 用法
-* 安装(root)```curl -L https://raw.githubusercontent.com/breakwa2333/Crack/master/install.sh | bash```
-* 启动```systemctl start Crack```
-* 重启```systemctl restart Crack```
-* 状态```systemctl status Crack```
-* 编辑服务器配置文件(root)```Crack```
+* 安装(root) ```curl -L https://raw.githubusercontent.com/breakwa2333/Crack/master/install.sh | bash```
+* 启动 ```systemctl start Crack```
+* 重启 ```systemctl restart Crack```
+* 状态 ```systemctl status Crack```
+* 编辑服务器配置文件(root) ```Crack```
 ## FAQ 常见问题
 * Q: 客户端代理服务器端口是不是配置文件中'local_port'指定的端口？  
 A: 是的，Crack与其他代理不同的是HTTP代理与SOCKS5代理共用同一端口，自动识别协议。
