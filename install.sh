@@ -1,11 +1,5 @@
 #!/bin/bash
-main(){
-  mkdir ./Crack
-  cd ./Crack
-  apt-get update
-  apt-get install python3.7.6 -y
-  wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
-  python3.7.6 Server.py
+service(){
   cat>./Crack/Crack.service<<EOF
   [Unit]
   Description=test deamon
@@ -22,6 +16,16 @@ main(){
   [Install]
   WantedBy=multi-user.target
   EOF
+}
+
+main(){
+  mkdir ./Crack
+  cd ./Crack
+  apt-get update
+  apt-get install python3.7.6 -y
+  wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
+  python3.7.6 Server.py
+  service
   mv ./Crack/Crack.service /etc/systemd/system/
   systemctl enable Crack.service
   systemctl start Crack.service
