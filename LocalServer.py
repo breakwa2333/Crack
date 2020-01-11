@@ -34,22 +34,16 @@ class TLS():
         self.server.send(self.UUID)
 
     def loop(self):
-        try:
-            while True:
-                r, w, e = select([self.client, self.server], [], [])
-                if self.client in r:
-                    data = self.client.recv(65536)
-                    if self.server.send(data) <= 0:
-                        break
-                if self.server in r:
-                    data = self.server.recv(65536)
-                    if self.client.send(data) <= 0:
-                        break
-        except Exception:
-            pass
-        finally:
-            self.client.close()
-            self.server.close()
+        while True:
+            r, w, e = select([self.client, self.server], [], [])
+            if self.client in r:
+                data = self.client.recv(65536)
+                if self.server.send(data) <= 0:
+                    break
+            if self.server in r:
+                data = self.server.recv(65536)
+                if self.client.send(data) <= 0:
+                    break
 
 class SOCKS5(config,TLS):
     def run(self):
@@ -58,10 +52,10 @@ class SOCKS5(config,TLS):
             self.load_TLS()
             self.verify()
             self.server.send(self.host + b'\o\o' + self.port + b'\o\o')
-        except Exception:
-            return 0
-        else:
             self.loop()
+        except Exception:
+            self.client.close()
+            self.server.close()
 
     def analysis_socks5(self):
         self.client.send(b'\x05\x00')
@@ -84,10 +78,11 @@ class HTTP(config,TLS):
         try:
             self.analysis_http()
             self.mode()
-        except Exception:
-            return 0
-        else:
             self.loop()
+        except Exception:
+            self.client.close()
+            self.server.close()
+
 
     def delete(self,host):
         sigment = host.split('.')

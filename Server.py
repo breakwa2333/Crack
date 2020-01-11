@@ -18,11 +18,10 @@ class TCP_handler(StreamRequestHandler,config):
             self.load_TLS()
             self.verify()
             self.analysis()
+            self.loop()
         except Exception:
             self.client.close()
-            return 0
-        else:
-            self.loop()
+            self.server.close()
 
     def analysis(self):
         self.request_data = self.client.recv(65536)
@@ -43,23 +42,17 @@ class TCP_handler(StreamRequestHandler,config):
             raise Exception
 
     def loop(self):
-        try:
-            self.server.send(self.request_data)
-            while True:
-                r, w, e = select([self.client, self.server], [], [])
-                if self.client in r:
-                    data = self.client.recv(65536)
-                    if self.server.send(data) <= 0:
-                        break
-                if self.server in r:
-                    data = self.server.recv(65536)
-                    if self.client.send(data) <= 0:
-                        break
-        except Exception:
-            pass
-        finally:
-            self.client.close()
-            self.server.close()
+        self.server.send(self.request_data)
+        while True:
+            r, w, e = select([self.client, self.server], [], [])
+            if self.client in r:
+                data = self.client.recv(65536)
+                if self.server.send(data) <= 0:
+                    break
+            if self.server in r:
+                data = self.server.recv(65536)
+                if self.client.send(data) <= 0:
+                    break
 
 class Crack(ThreadingTCPServer,config):
     def __init__(self):
