@@ -3,9 +3,10 @@ from socketserver import StreamRequestHandler,ThreadingTCPServer
 from socket import socket,create_connection,inet_ntop,AF_INET6,AF_INET
 from ssl import SSLContext,PROTOCOL_TLS,CERT_REQUIRED,TLSVersion
 from json import *
+from ipaddress import ip_address,ip_network
 from re import match
 from os import path
-from sys import argv
+from sys import argv,getsizeof
 
 class config():
     CHINA_LIST = {}
@@ -33,29 +34,20 @@ class TLS():
     def verify(self):
         self.server.send(self.UUID)
 
-    def loop(self):
-        while True:
-            r, w, e = select([self.client, self.server], [], [])
-            if self.client in r:
-                data = self.client.recv(65536)
-                if self.server.send(data) <= 0:
-                    break
-            if self.server in r:
-                data = self.server.recv(65536)
-                if self.client.send(data) <= 0:
-                    break
-
-class SOCKS5(config,TLS):
+class SOCKS5():
     def run(self):
         try:
             self.analysis_socks5()
             self.load_TLS()
             self.verify()
             self.server.send(self.host + b'\o\o' + self.port + b'\o\o')
-            self.loop()
+            self.loop_socks5()
         except Exception:
-            self.client.close()
-            self.server.close()
+            try:
+                self.client.close()
+                self.server.close()
+            except Exception:
+                pass
 
     def analysis_socks5(self):
         self.client.send(b'\x05\x00')
@@ -73,16 +65,30 @@ class SOCKS5(config,TLS):
             self.port = str(int.from_bytes(request[-2:], 'big')).encode('utf-8')
             self.client.send(b'\x05\x00\x00\x03' + request[4:])
 
-class HTTP(config,TLS):
+    def loop_socks5(self):
+        while True:
+            r, w, e = select([self.client, self.server], [], [])
+            if self.client in r:
+                data = self.client.recv(65536)
+                if self.server.send(data) <= 0:
+                    break
+            if self.server in r:
+                data = self.server.recv(65536)
+                if self.client.send(data) <= 0:
+                    break
+
+class HTTP():
     def run(self):
         try:
             self.analysis_http()
             self.mode()
-            self.loop()
+            self.loop_http()
         except Exception:
-            self.client.close()
-            self.server.close()
-
+            try:
+                self.client.close()
+                self.server.close()
+            except Exception:
+                pass
 
     def delete(self,host):
         sigment = host.split('.')
@@ -134,14 +140,27 @@ class HTTP(config,TLS):
             self.server = create_connection((self.host, int(self.port)), 5)
         self.response()
 
-class TCP_handler(StreamRequestHandler,HTTP,SOCKS5):
+    def loop_http(self):
+        while True:
+            r, w, e = select([self.client, self.server], [], [])
+            if self.client in r:
+                data = self.client.recv(65536)
+                if self.server.send(data) <= 0:
+                    break
+            if self.server in r:
+                data = self.server.recv(65536)
+                if self.client.send(data) <= 0:
+                    break
+
+class TCP_handler(StreamRequestHandler,HTTP,SOCKS5,config,TLS):
     def handle(self):
         try:
             self.client = self.connection
             self.request_data = self.client.recv(65536)
+            if self.request_data == b'':
+                raise ConnectionError
         except Exception:
             self.client.close()
-            return 0
         else:
             if self.request_data[:1] != b'\x05':
                 HTTP.run(self)
@@ -169,39 +188,80 @@ class Crack(ThreadingTCPServer,config):
             config.LOCAL_PORT = int(conf[self.ACTIVE]['local_port'])
             config.SERVER_HOST = conf[self.ACTIVE]['server_host']
             config.SERVER_PORT = int(conf[self.ACTIVE]['server_port'])
-            config.CHINA_LIST_PATH = self.translate(conf[self.ACTIVE]['china_list_path'])
+            self.CHINA_LIST_PATH = self.translate(conf[self.ACTIVE]['china_list_path'])
+            self.GEOIP_PATH = self.translate(conf[self.ACTIVE]['geoip_path'])
             self.load_CHINA_LIST()
+            self.load_GEOIP()
         else:
-            example = {'mode': '','active': '','my_server':{'uuid': '','ca': '','server_host': '','server_port': '','local_port': '','china_list_path': ''}}
+            example = {'mode': '','active': '','my_server':{'uuid': '','ca': '','server_host': '','server_port': '','local_port': '','china_list_path': '','geoip_path': ''}}
             file = open(conf_path, 'w')
             dump(example, file, indent=4)
             file.close()
             raise AttributeError
 
+    def IP_CIDR(self,ipv4):
+        sigment = ipv4.split('/')
+        NCIDR = int(sigment[1])
+        sigment = sigment[0].split('.')
+        diction = {8: sigment[0] + '.*',
+                   16: sigment[0] + '.' + sigment[1] + '.*',
+                   24: sigment[0] + '.' + sigment[1] + '.' + sigment[2] + '.*',
+                   32: sigment[0] + '.' + sigment[1] + '.' + sigment[2] + '.' + sigment[3]}
+        ipv4 = []
+        S = int('{:08b}'.format(int(sigment[NCIDR // 8]))[0:NCIDR % 8] + '00000000'[NCIDR % 8:8], 2)
+        E = int('{:08b}'.format(int(sigment[NCIDR // 8]))[0:NCIDR % 8] + '11111111'[NCIDR % 8:8], 2)
+        if int(sigment[NCIDR // 8]) <= S:
+            if NCIDR in diction:
+                return [diction[NCIDR]]
+            for x in range(S, E + 1):
+                item = ''
+                for y in range(0, NCIDR // 8):
+                    item += sigment[y] + '.'
+                if NCIDR < 24:
+                    item += str(x) + '.' + '*'
+                else:
+                    item += str(x)
+                ipv4.append(item)
+        return ipv4
 
     def deepsearch(self,CHINA_LIST, location):
-        for key in location.keys():
-            if key not in CHINA_LIST:
-                CHINA_LIST[key] = location[key]
-            else:
-                self.deepsearch(CHINA_LIST[key], location[key])
+        if 0 != location:
+            for key in location.keys():
+                if key not in CHINA_LIST:
+                    CHINA_LIST[key] = location[key]
+                else:
+                    self.deepsearch(CHINA_LIST[key], location[key])
+
+    def load_list(self,sigment):
+        location = {'|':0}
+        for y in sigment:
+            location = {y: location}
+        self.deepsearch(self.CHINA_LIST, location)
 
     def load_CHINA_LIST(self):
-        file = open(self.CHINA_LIST_PATH,'r')
-        data = load(file)
-        file.close()
-        for x in data:
-            sigment = x.split('.')
-            if match('\D', sigment[-1]) == None:
-                sigment.reverse()
-            location = {'|': {}}
-            for y in sigment:
-                location = {y: location}
-            self.deepsearch(self.CHINA_LIST, location)
+        if self.CHINA_LIST_PATH != '':
+            file = open(self.CHINA_LIST_PATH, 'r')
+            data = load(file)
+            file.close()
+            for x in data:
+                sigment = x.split('.')
+                if match('\D', sigment[-1]) == None:
+                    sigment.reverse()
+                self.load_list(sigment)
+
+    def load_GEOIP(self):
+        if self.GEOIP_PATH != '':
+            file = open(self.GEOIP_PATH, 'r')
+            data = load(file)
+            file.close()
+            for x in data:
+                for y in self.IP_CIDR(x):
+                    sigment = y.split('.')
+                    sigment.reverse()
+                    self.load_list(sigment)
 
     def translate(self,path):
         return path.replace('\\', '/')
-
 
 if __name__ == '__main__':
     try:

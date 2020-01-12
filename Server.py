@@ -20,8 +20,11 @@ class TCP_handler(StreamRequestHandler,config):
             self.analysis()
             self.loop()
         except Exception:
-            self.client.close()
-            self.server.close()
+            try:
+                self.client.close()
+                self.server.close()
+            except Exception:
+                pass
 
     def analysis(self):
         self.request_data = self.client.recv(65536)
