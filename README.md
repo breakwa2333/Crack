@@ -11,10 +11,12 @@ A light proxy based on TLS to avoid network censorship.
 * Proxy for UDP data
 * TLS Pre-Handshake (Reduce latency)
 * Link Aggregation (Increase single-thread bandwidth during peak hours)
+* Chinalist automatic learning
 * ~~自动模式（Crack内建自动模式，避免因PAC造成的DNS泄露）~~ (已完成)
 * UDP数据代理
 * TLS预握手（减少延迟）
 * 链路聚合（高峰时段增加单线程带宽）
+* Chinalist自动学习
 ## PROJECT STATUS 项目状态
 * 2019/12/30
   * Support HTTP proxy for TCP data only.
