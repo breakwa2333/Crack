@@ -5,7 +5,7 @@ A light proxy based on TLS to avoid network censorship.
 * In order to prove both HTTP/WS and camouflage website isn't a necessary factor to crack the wall, this project simply use TCP+TLS as the transport methord only.
 * Goal for this project is to balance the speed, security and stability that could someday replace Shadowsocks, ShadowsocksR even V2RAY.
 * 证明 HTTP/WS 和网站伪装不是过墙的重要因素，本项目只使用TCP+TLS作为传输方式。
-* 本项的目标是平衡速度，安全以及稳定性，有朝一日可以取代Shadowsocks、ShadowsocksR甚至V2RAY。
+* 本项的目标是平衡速度，安全以及稳定性。
 ## TO DO LIST 未来目标
 * ~~Auto mode (Crack built-in automatic mode to avoid DNS leaks caused by PAC)~~ (Finished)
 * Proxy for UDP data
