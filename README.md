@@ -73,8 +73,8 @@ A light proxy based on TLS to avoid network censorship.
 A: 是的，Crack与其他代理不同的是HTTP代理与SOCKS5代理共用同一端口，自动识别协议。
 * Q: Crack是基于什么版本的TLS协议？  
 A: 基于TLS1.3，出于安全原因目前Crack仅支持TLS1.3及后续版本。
-* Q: 为什么我不能安装？  
-A: 安装脚本仅支持Ubuntu发行版，并且需要root权限。
+* Q: 为什么我不能使用安装脚本安装？  
+A: 安装脚本仅支持Ubuntu18.04+，并且需要root权限。
 * Q: Crack支持自签证书吗？  
 A: Crack支持自签证书以及CA机构颁发的证书，如果使用自签证书需要下载根证书，并在Crack客户端配置文件中填写根证书路径。使用Crack时自签根证书无需导入系统  根证书目录，因此不会影响其他应用安全性。
 * Q: 为什么Crack客户端开启GEOIP后内存占用那么多？  
