@@ -3,11 +3,11 @@ service(){
   touch $(cd "$(dirname "$0")";pwd)/Crack.service
   cat>$(cd "$(dirname "$0")";pwd)/Crack.service<<EOF
   [Unit]
-  Description=test deamon
+  Description=Crack Network Service
   After=rc-local.service
 
   [Service]
-  Type=simple
+  Type=forking
   User=root
   Group=root
   WorkingDirectory=$(cd "$(dirname "$0")";pwd)
