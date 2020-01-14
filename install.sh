@@ -24,6 +24,12 @@ conf(){
   reboot
 }
 
+bbr(){
+  echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+  echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+  sysctl -p
+}
+
 main(){
   mkdir $(cd "$(dirname "$0")";pwd)/Crack
   cd $(cd "$(dirname "$0")";pwd)/Crack
@@ -37,6 +43,7 @@ main(){
   mv $(cd "$(dirname "$0")";pwd)/Crack.service /etc/systemd/system/
   systemctl enable Crack.service
   systemctl start Crack.service
+  bbr
   conf
 }
 
