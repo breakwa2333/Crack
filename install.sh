@@ -13,6 +13,7 @@ service(){
   WorkingDirectory=$(cd "$(dirname "$0")";pwd)
   ExecStart=/usr/bin/python3.7 $(cd "$(dirname "$0")";pwd)/Server.py
   Restart=always
+  TasksMax=infinity
 
   [Install]
   WantedBy=multi-user.target
