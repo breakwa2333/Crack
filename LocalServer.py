@@ -61,6 +61,7 @@ class SOCKS5(StreamRequestHandler,TLS,loops,config):
                 self.server.close()
             except Exception:
                 pass
+        return 0
 
     def analysis_socks5(self):
         self.client.send(b'\x05\x00')
@@ -90,6 +91,7 @@ class HTTP(StreamRequestHandler,TLS,loops,config):
                 self.server.close()
             except Exception:
                 pass
+        return 0
 
     def delete(self,host):
 
