@@ -40,11 +40,11 @@ class loops():
             r, w, e = select([self.client, self.server], [], [])
             if self.client in r:
                 data = self.client.recv(65536)
-                if self.server.send(data) <= 0:
+                if data == b'' or self.server.send(data) <= 0:
                     break
             if self.server in r:
                 data = self.server.recv(65536)
-                if self.client.send(data) <= 0:
+                if data == b'' or self.client.send(data) <= 0:
                     break
 
 class SOCKS5(StreamRequestHandler,TLS,loops,config):
@@ -56,11 +56,15 @@ class SOCKS5(StreamRequestHandler,TLS,loops,config):
             self.server.send(self.host + b'\o\o' + self.port + b'\o\o')
             self.loop()
         except Exception:
-            try:
-                self.client.close()
-                self.server.close()
-            except Exception:
-                pass
+            pass
+        try:
+            self.client.close()
+        except Exception:
+            pass
+        try:
+            self.server.close()
+        except Exception:
+            pass
         return 0
 
     def analysis_socks5(self):
@@ -86,11 +90,15 @@ class HTTP(StreamRequestHandler,TLS,loops,config):
             self.mode()
             self.loop()
         except Exception:
-            try:
-                self.client.close()
-                self.server.close()
-            except Exception:
-                pass
+            pass
+        try:
+            self.client.close()
+        except Exception:
+            pass
+        try:
+            self.server.close()
+        except Exception:
+            pass
         return 0
 
     def delete(self,host):

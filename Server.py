@@ -20,11 +20,15 @@ class TCP_handler(StreamRequestHandler,config):
             self.analysis()
             self.loop()
         except Exception:
-            try:
-                self.client.close()
-                self.server.close()
-            except Exception:
-                pass
+            pass
+        try:
+            self.client.close()
+        except Exception:
+            pass
+        try:
+            self.server.close()
+        except Exception:
+            pass
         return 0
 
     def analysis(self):
