@@ -7,7 +7,7 @@ service(){
   After=rc-local.service
 
   [Service]
-  Type=forking
+  Type=simple
   User=root
   Group=root
   WorkingDirectory=$(cd "$(dirname "$0")";pwd)
