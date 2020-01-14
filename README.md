@@ -63,7 +63,7 @@ A light proxy based on TLS to avoid network censorship.
   * ```key``` 服务器私钥路径
   * ```port``` 指定服务器监听端口
 ## USAGE 用法
-警告：请勿使用锐速，可能会造成不可预知的负面效果。
+**警告：请勿使用锐速，可能会造成不可预知的负面效果。**
 * 安装(root) ```curl -L https://raw.githubusercontent.com/breakwa2333/Crack/master/install.sh | bash```
 * 启动 ```systemctl start Crack```
 * 重启 ```systemctl restart Crack```
