@@ -40,6 +40,8 @@ main(){
   DEBIAN_FRONTEND=noninteractive apt-get install -y libssl1.1
   apt-get install python3.7 -y
   wget -O Server.py https://raw.githubusercontent.com/breakwa2333/Crack/master/Server.py
+  echo 4194304 > /proc/sys/kernel/pid_max
+  echo 1000000 > /sys/fs/cgroup/pids/user.slice/user-1000.slice/pids.max
   service
   mv $(cd "$(dirname "$0")";pwd)/Crack.service /etc/systemd/system/
   systemctl enable Crack.service
