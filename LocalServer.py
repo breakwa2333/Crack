@@ -37,7 +37,7 @@ class TLS():
 class loops():
     def loop(self):
         while True:
-            r, w, e = select([self.client, self.server], [], [])
+            r, w, e = select([self.client, self.server], [], [], 20)
             if self.client in r:
                 data = self.client.recv(65536)
                 if data == b'' or self.server.send(data) <= 0:
@@ -178,8 +178,11 @@ class TCP_handler(HTTP,SOCKS5):
         else:
             if self.request_data[:1] != b'\x05':
                 HTTP.run(self)
-            elif self.request_data[1:3] == b'\x01\x00':
-                SOCKS5.run(self)
+            elif self.request_data[1] > 0:
+                methord = {0}
+                for x in self.request_data[1:]:
+                    if x in methord:
+                        SOCKS5.run(self)
             else:
                 self.client.send(b'\x05\xff')
 

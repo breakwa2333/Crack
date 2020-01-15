@@ -52,14 +52,14 @@ class TCP_handler(StreamRequestHandler,config):
     def loop(self):
         self.server.send(self.request_data)
         while True:
-            r, w, e = select([self.client, self.server], [], [])
+            r, w, e = select([self.client, self.server], [], [], 20)
             if self.client in r:
                 data = self.client.recv(65536)
-                if self.server.send(data) <= 0:
+                if data == b'' or self.server.send(data) <= 0:
                     break
             if self.server in r:
                 data = self.server.recv(65536)
-                if self.client.send(data) <= 0:
+                if data == b'' or self.client.send(data) <= 0:
                     break
 
 class Crack(ThreadingTCPServer,config):
